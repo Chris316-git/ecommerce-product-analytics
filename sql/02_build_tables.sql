@@ -185,6 +185,9 @@ JOIN first_event f USING (user_pseudo_id);
 --     t_checkout = first begin_checkout  with ts >= t_cart
 --     t_purchase = first purchase        with ts >= t_checkout
 --   ">=" allows two steps logged in the same microsecond.
+--   SENSITIVITY funnel (Issue #15, add_to_cart tracking is incomplete):
+--     t_checkout_nocart = first begin_checkout with ts >= t_view
+--     t_purchase_nocart = first purchase       with ts >= t_checkout_nocart
 --   Unordered has_* flags are kept so QA can measure ordered vs unordered gap.
 --   Sessions are defined by session_key, not session_start events (Issue #2).
 -- SQL: events are collected into one array per session; each CTE adds one
@@ -242,6 +245,18 @@ step4 AS (
       WHERE e.name = 'purchase' AND e.ts >= t_checkout)          AS t_purchase
   FROM step3
 ),
+step5 AS (
+  SELECT *,
+    (SELECT MIN(e.ts) FROM UNNEST(funnel_events) e
+      WHERE e.name = 'begin_checkout' AND e.ts >= t_view)        AS t_checkout_nocart
+  FROM step4
+),
+step6 AS (
+  SELECT *,
+    (SELECT MIN(e.ts) FROM UNNEST(funnel_events) e
+      WHERE e.name = 'purchase' AND e.ts >= t_checkout_nocart)   AS t_purchase_nocart
+  FROM step5
+),
 session_revenue AS (
   SELECT
     session_key,
@@ -280,9 +295,11 @@ SELECT
   (s.t_cart     IS NOT NULL)                                      AS reached_cart,
   (s.t_checkout IS NOT NULL)                                      AS reached_checkout,
   (s.t_purchase IS NOT NULL)                                      AS reached_purchase,
+  (s.t_checkout_nocart IS NOT NULL)                               AS reached_checkout_nocart,
+  (s.t_purchase_nocart IS NOT NULL)                               AS reached_purchase_nocart,
   IFNULL(r.n_transactions, 0)                                     AS n_transactions,
   r.revenue                                                       AS revenue
-FROM step4 s
+FROM step6 s
 LEFT JOIN session_revenue r USING (session_key);
 
 
@@ -290,6 +307,8 @@ LEFT JOIN session_revenue r USING (session_key);
 -- 5. dim_date — grain: 1 calendar day
 -- WHY: Power BI needs a continuous date table for trends and time slicers.
 --   week_start uses the SAME week definition as dim_users.cohort_week.
+--   Tracking flags let every analysis (and the dashboard) restrict itself to
+--   days where the relevant events were actually recorded.
 -- -----------------------------------------------------------------------------
 CREATE OR REPLACE TABLE `ecom-product-analytics-511200.ecom_analytics.dim_date` AS
 SELECT
@@ -300,5 +319,8 @@ SELECT
   FORMAT_DATE('%a', d)                                 AS day_of_week,
   EXTRACT(DAYOFWEEK FROM d) IN (1, 7)                  AS is_weekend,
   DATE_ADD(DATE_TRUNC(d, WEEK(SUNDAY)), INTERVAL 6 DAY) > DATE '2021-01-31'
-                                                       AS is_partial_week
+                                                       AS is_partial_week,
+  -- Tracking-quality flags (Issue #16, found in Phase 4 daily diagnostics)
+  d >= DATE '2020-11-26'                               AS is_cart_tracked,     -- add_to_cart live
+  d BETWEEN DATE '2020-11-12' AND DATE '2021-01-25'    AS is_txn_tracked       -- valid transaction_id + revenue
 FROM UNNEST(GENERATE_DATE_ARRAY(DATE '2020-11-01', DATE '2021-01-31')) AS d;

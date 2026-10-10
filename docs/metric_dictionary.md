@@ -9,7 +9,8 @@ Baselines cover the full window (2020-11-01 to 2021-01-31) and come from the cle
 2. **Distinct counts don't add up.** Users per day cannot be summed into users per month; a returning user would be counted once per day. Always recount distinct users at the level you report.
 3. **Ratios are computed as SUM(numerator) / SUM(denominator)**, never as an average of daily or segment ratios. Averaging ratios gives small segments the same weight as large ones.
 4. **Revenue comes from `fct_transactions` only.** It is deduplicated (one row per order). Never sum order revenue after joining to item lines (that inflates revenue 4.8× in this data).
-5. **Strict funnel = main definition; broad = sensitivity check.** The strict funnel requires view_item → add_to_cart → begin_checkout → purchase in order within one session. Because add_to_cart tracking is incomplete (Issue #15 in `data_model.md`), we also report the broad version ("purchase happened in the session") so the gap is visible.
+5. **Strict funnel = main definition; broad = sensitivity check.** The strict funnel requires view_item → add_to_cart → begin_checkout → purchase in order within one session. Because add_to_cart tracking is incomplete (Issues #15–16 in `data_model.md`), we also report the broad version ("purchase happened in the session") so the gap is visible.
+6. **Cart-based metrics use the cart-tracked window (from 2020-11-26).** add_to_cart was not tracked before then, so M09–M13 and M15 are reported on that window in the analysis (see below). The full-window baselines in the tables are kept to show the size of the tracking effect.
 
 ## Acquisition
 
@@ -72,6 +73,21 @@ Broad check: 4,848 sessions contain a purchase (1.346%).
 ```
 
 Multiplying the step rates gives back the strict CVR: 21.39% × 19.69% × 35.71% × 52.33% ≈ 0.787%. This identity is a quick sanity check for any funnel chart.
+
+## Funnel baselines in the cart-tracked window (2020-11-26 → 2021-01-31)
+
+| ID | Metric | Full window | Cart-tracked window |
+|---|---|---|---|
+| M03 | Sessions | 360,129 | 271,105 |
+| M08 | Product view rate | 21.39% | 20.47% |
+| M10 | View → cart | 19.69% | **26.23%** |
+| M11 | Cart → checkout | 35.71% | 35.57% |
+| M12 | Checkout → purchase | 52.33% | 52.87% |
+| M13 | Session CVR (strict) | 0.787% | **1.010%** |
+| M14 | Session CVR (broad) | 1.346% | 1.337% |
+| — | Strict share of purchase sessions | 58.5% | 75.5% |
+
+View → cart jumps from 19.7% to 26.2% once the untracked weeks are removed. That one comparison is the clearest illustration of why tracking windows matter.
 
 ## Appendix — baseline query
 

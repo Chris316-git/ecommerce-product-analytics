@@ -90,6 +90,7 @@ Funnel events present: `view_item` (386,068), `add_to_cart` (58,543), `begin_che
 | 13 | Cookie-based identity | 4,182 users show >1 device category | Accept; state as a limitation (no cross-device stitching) |
 | 14 | Holiday season window | Nov–Jan only | Interpret trends as seasonal; weekly cohorts are the main retention view |
 | 15 | add_to_cart tracking incomplete | 5,145 of 5,690 checkout sessions and 2,000 of 2,014 purchase sessions that fail the ordered funnel have **no** add_to_cart event; only 257 purchase sessions had a cart in an earlier session | Keep the strict ordered funnel as the main definition, report the gap, and add a sensitivity funnel (view → checkout → purchase) in Phase 4 |
+| 16 | Tracking windows | add_to_cart ≈0 events before 2020-11-26 (brief test Nov 16–20); transaction_id missing on all purchases Nov 1–11; revenue + id missing on most purchases Jan 26–31 | `dim_date.is_cart_tracked` (≥ Nov 26) and `is_txn_tracked` (Nov 12 – Jan 25); strict-funnel analysis uses the cart-tracked window only |
 
 ## 6. What Phase 2 builds from this
 
@@ -99,4 +100,4 @@ Funnel events present: `view_item` (386,068), `add_to_cart` (58,543), `begin_che
 | `dim_users` | 1 user | earliest-event channel/device/country, `first_touch_ts`, `is_new_in_window` |
 | `fct_sessions` | 1 session | session key, device, country, ordered funnel step timestamps, purchase flag, revenue |
 | `fct_transactions` | 1 transaction | dedup rules from issues 7–9 |
-| `dim_date` | 1 calendar day | `GENERATE_DATE_ARRAY` over the window |
+| `dim_date` | 1 calendar day | `GENERATE_DATE_ARRAY` over the window + tracking-quality flags (Issue #16) |
