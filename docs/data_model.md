@@ -89,6 +89,7 @@ Funnel events present: `view_item` (386,068), `add_to_cart` (58,543), `begin_che
 | 12 | Exact duplicate events | 0 found | No event-level dedup needed |
 | 13 | Cookie-based identity | 4,182 users show >1 device category | Accept; state as a limitation (no cross-device stitching) |
 | 14 | Holiday season window | Nov–Jan only | Interpret trends as seasonal; weekly cohorts are the main retention view |
+| 15 | add_to_cart tracking incomplete | 5,145 of 5,690 checkout sessions and 2,000 of 2,014 purchase sessions that fail the ordered funnel have **no** add_to_cart event; only 257 purchase sessions had a cart in an earlier session | Keep the strict ordered funnel as the main definition, report the gap, and add a sensitivity funnel (view → checkout → purchase) in Phase 4 |
 
 ## 6. What Phase 2 builds from this
 
