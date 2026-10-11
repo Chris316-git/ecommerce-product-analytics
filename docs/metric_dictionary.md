@@ -60,6 +60,16 @@ Baselines cover the full window (2020-11-01 to 2021-01-31) and come from the cle
 | M22 | Week-N retention | users in cohort with ≥1 session in days 7N..7N+6 after first visit / cohort size | `dim_users`, `fct_sessions` | Phase 6 | Do new users come back? | **Right censoring:** Week N is only computed for cohorts with a fully observed Week N; unobserved cells are NULL, not 0 |
 | M23 | Cohort size | new users per `cohort_week` | `dim_users` | Phase 6 | Denominator for M22 | Partial first/last calendar weeks excluded |
 
+## Acquisition quality (new users, fixed 14-day window)
+
+Population: new users with first visit 2020-11-26 → 2021-01-11 (142,183), so every user has the same 14 observable days inside the tracked window. Source: `mart_acquisition_14d`.
+
+| ID | Metric | Numerator / Denominator | Source | Baseline | Interpretation | Pitfalls |
+|---|---|---|---|---|---|---|
+| M24 | 14-day purchase rate | new users with ≥1 purchase session in days 0–13 / new users | `mart_acquisition_14d` | 1.26% (Organic 1.28%, Paid 1.34%) | Channel / segment quality | Compare with 95% CIs; small segments are noisy |
+| M25 | 14-day revenue per new user | revenue in days 0–13 / new users | `mart_acquisition_14d` | $0.93 (Paid Search $1.20) | Value of an acquired user | Driven by AOV as much as conversion |
+| M26 | 14-day return rate | new users with a session on a later day within days 0–13 / new users | `mart_acquisition_14d` | 7.6%–7.9% by channel | Early stickiness | Not the same as Week-N retention (M22) |
+
 ## How the main funnel fits together
 
 ```
