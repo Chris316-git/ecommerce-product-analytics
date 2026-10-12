@@ -57,8 +57,8 @@ Baselines cover the full window (2020-11-01 to 2021-01-31) and come from the cle
 
 | ID | Metric | Numerator / Denominator | Source | Baseline | Interpretation | Pitfalls |
 |---|---|---|---|---|---|---|
-| M22 | Week-N retention | users in cohort with ≥1 session in days 7N..7N+6 after first visit / cohort size | `dim_users`, `fct_sessions` | Phase 6 | Do new users come back? | **Right censoring:** Week N is only computed for cohorts with a fully observed Week N; unobserved cells are NULL, not 0 |
-| M23 | Cohort size | new users per `cohort_week` | `dim_users` | Phase 6 | Denominator for M22 | Partial first/last calendar weeks excluded |
+| M22 | Week-N retention | users in cohort with ≥1 session in days 7N..7N+6 after first visit / cohort size | `mart_cohort_retention` | W1 2.14%, W2 1.27%, W4 0.82%, W8 0.26% | Do new users come back? | **Right censoring:** Week N is only computed for cohorts with a fully observed Week N; unobserved cells are NULL, not 0 |
+| M23 | Cohort size | new users per `cohort_week` | `mart_cohort_retention` | 13 weekly cohorts, 255,189 new users (14.5k–27.1k each) | Denominator for M22 | Partial first/last calendar weeks excluded |
 
 ## Acquisition quality (new users, fixed 14-day window)
 
