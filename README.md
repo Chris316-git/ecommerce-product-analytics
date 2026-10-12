@@ -1,6 +1,6 @@
 # E-Commerce Product Funnel & Retention Analytics
 
-**SQL (BigQuery) · Product metrics · Funnel & cohort analysis · A/B test design · Power BI (in progress)**
+**SQL (BigQuery) · Product metrics · Funnel & cohort analysis · A/B test design**
 
 Analysis of 4.3M real GA4 events from the Google Merchandise Store (Nov 2020 – Jan 2021) to answer: *where does the purchase funnel leak, which users are worth acquiring, do new users come back, and what should the product team test first?*
 
@@ -47,7 +47,7 @@ events (1 row = 1 event)
 | `fct_sessions` | session | ordered funnel timestamps, new/returning, revenue |
 | `fct_transactions` | order | deduplicated purchases (one row per transaction) |
 | `dim_date` | day | calendar + tracking-quality flags |
-| `mart_*` | pre-aggregated | additive tables for the dashboard |
+| `mart_*` | pre-aggregated | additive tables ready for BI tools |
 
 Full detail and 16 documented data issues: [`docs/data_model.md`](docs/data_model.md).
 
@@ -65,11 +65,7 @@ Full detail and 16 documented data issues: [`docs/data_model.md`](docs/data_mode
 
 CTEs · `UNNEST` of nested arrays · scalar subqueries · window functions (`ROW_NUMBER`, `COUNT/SUM OVER`, `MAX OVER PARTITION BY`, running `LOGICAL_OR`) · `QUALIFY` for dedup · conditional aggregation / pivots · `GROUP BY ROLLUP` · `GENERATE_ARRAY` grids for cohort matrices · date math for cohort weeks and censoring · partitioned and clustered tables.
 
-## 6. Dashboard
-
-Power BI dashboard (Executive overview · Funnel & acquisition · Cohort retention), built on the `mart_*` tables with simple `DIVIDE`-based DAX measures. All business logic stays in SQL. *In progress; screenshots will be added to [`dashboard/`](dashboard/).*
-
-## 7. Key findings
+## 6. Key findings
 
 | # | Finding | Evidence |
 |---|---|---|
@@ -82,11 +78,11 @@ Power BI dashboard (Executive overview · Funnel & acquisition · Cohort retenti
 
 Details: [`funnel_findings`](docs/funnel_findings.md) · [`acquisition_findings`](docs/acquisition_findings.md) · [`retention_findings`](docs/retention_findings.md)
 
-## 8. Experiment design
+## 7. Experiment design
 
 Simplified checkout for first-time visitors. **User-level sticky randomization**, primary metric = checkout completion among users who reach checkout (baseline **47.3%**), α = 0.05, power = 80%, MDE = 10% relative → **1,752 users per arm, ~6.4 weeks**. Guardrails: AOV, payment errors, SRM. Design only, no results claimed. See [`experiment/ab_test_design.md`](experiment/ab_test_design.md) and [`sample_size.py`](experiment/sample_size.py).
 
-## 9. Business recommendations
+## 8. Business recommendations
 
 1. **Fix event tracking** (add_to_cart, transaction_id, revenue) and alert on gaps
 2. **A/B test a simplified checkout** for first-time visitors
@@ -96,9 +92,9 @@ Simplified checkout for first-time visitors. **User-level sticky randomization**
 
 Full Finding → Evidence → Implication → Action → Metric: [`docs/business_recommendations.md`](docs/business_recommendations.md)
 
-## 10. Tech stack
+## 9. Tech stack
 
-**BigQuery (Standard SQL)** · **Power BI** · Python (stdlib only, sample-size calculation) · Git / GitHub
+**BigQuery (Standard SQL)** · Python (stdlib only, sample-size calculation) · Git / GitHub
 
 ## Repository structure
 
@@ -113,8 +109,7 @@ Full Finding → Evidence → Implication → Action → Metric: [`docs/business
 │   ├── 06_qa_checks.sql           post-build QA (18 checks)
 │   └── 07_experiment_baseline.sql
 ├── docs/                          data model, metric dictionary, findings, recommendations
-├── experiment/                    A/B test design + sample-size script
-└── dashboard/                     Power BI file + screenshots
+└── experiment/                    A/B test design + sample-size script
 ```
 
 ## Reproduce
@@ -123,6 +118,12 @@ Full Finding → Evidence → Implication → Action → Metric: [`docs/business
 2. Replace the project ID `ecom-product-analytics-511200` in the SQL files with yours.
 3. Run `02_build_tables.sql`, then the `CREATE` statements in `03`–`05`, then `06_qa_checks.sql`.
 4. Run `python experiment/sample_size.py`.
+
+## Next steps
+
+- **BI dashboard:** connect Power BI or Tableau to the `mart_*` tables (funnel, acquisition, cohort heatmap). All metric logic already lives in SQL, so the BI layer only needs simple ratio measures.
+- **Checkout sub-step drill-down:** `add_shipping_info` / `add_payment_info` for new users, to locate drop-off inside checkout.
+- **Activation analysis:** which first-session behaviours predict a return visit.
 
 ## Limitations
 

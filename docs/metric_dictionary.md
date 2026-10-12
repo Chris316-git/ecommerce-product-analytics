@@ -1,6 +1,6 @@
 # Metric Dictionary
 
-Every number in the analysis and the Power BI dashboard maps to exactly one metric below.
+Every number in the analysis (and in any BI dashboard built on the marts) maps to exactly one metric below.
 Baselines cover the full window (2020-11-01 to 2021-01-31) and come from the clean tables built in `sql/02_build_tables.sql` (query in the appendix).
 
 ## Ground rules
